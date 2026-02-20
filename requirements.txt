@@ -1,0 +1,4 @@
+PyQt6>=6.6.0
+PyQt6-Charts>=6.6.0
+SQLAlchemy>=2.0.0
+reportlab>=4.0.0
