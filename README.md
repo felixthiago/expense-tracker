@@ -2,6 +2,11 @@
 
 Aplicação desktop para gerenciar algumas despesas pessoais, com banco de dados local, visual moderno, categorias personalizadas, limites por categoria e exportação em CSV/PDF.
 
+## Aplicação em uso
+
+![Aplicação em uso](resources/imgs/expense_tracker.png)
+
+
 ## Requisitos
 
 - Python 3.9+
@@ -20,13 +25,13 @@ python main.py
 ```
 expense tracker/
 ├── main.py              
-├── app/                  # Configuração (paths, constantes)
+├── app/                  # Configuração basica
 ├── core/                 # Banco, modelos, repositório
 ├── services/             # Middleware para o banco (despesas, categorias, export)
-├── ui/                   # Interface PyQt6
-│   ├── main_window.py    # Janela principal e sidebar
-│   ├── styles/           # Tema QSS, fonte Poppins
-│   └── views/            # Dashboard, Despesas, Categorias
+├── ui/                   
+│   ├── main_window.py    
+│   ├── styles/           
+│   └── views/            
 ├── data/                 
 ├── exports/              # CSV/PDF exportados (criado automaticamente)
 └── resources/fonts/      

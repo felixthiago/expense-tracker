@@ -13,7 +13,6 @@ def load_fonts() -> str:
             try:
                 fid = QFontDatabase.addApplicationFont(str(f))
                 if fid != -1:
-                    print(f'loaded font: {f.name}')
                     families = QFontDatabase.applicationFontFamilies(fid)
                     if families and "Poppins" in families[0]:
                         font_family = "Poppins"

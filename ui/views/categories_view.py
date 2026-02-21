@@ -17,9 +17,10 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QWidget
+    QWidget,
+    QHeaderView,
 )
-from PyQt6.QtGui import QColor, QBrush
+from PyQt6.QtGui import QColor
 
 from core.database import session_scope
 from core import repository as repo
@@ -101,7 +102,8 @@ class CategoriesView(QWidget):
         title.setStyleSheet("font-size: 24px; font-weight: 600;")
         header.addWidget(title)
         header.addStretch()
-        self.add_btn = QPushButton("  Nova categoria")
+
+        self.add_btn = QPushButton("Nova categoria")
         self.add_btn.setProperty("class", "primary")
         self.add_btn.clicked.connect(self._open_form)
         header.addWidget(self.add_btn)
@@ -116,10 +118,11 @@ class CategoriesView(QWidget):
         self.table.setColumnWidth(0, 200)
         self.table.setColumnCount(5)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.verticalHeader().setDefaultSectionSize(45)
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setHorizontalHeaderLabels(["Nome", "Cor", "Limite mensal", "Gasto atual*", "Ações"])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.table)
         self.refresh()
@@ -177,13 +180,33 @@ class CategoriesView(QWidget):
 
             actions = QWidget()
             actions_layout = QHBoxLayout(actions)
-            actions_layout.setContentsMargins(4, 0, 4, 0)
-            edit_btn = QPushButton("Editar")
+            actions_layout.setContentsMargins(0, 0, 0, 0)
+            actions_layout.setSpacing(5)
+            actions_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            edit_btn = QPushButton("Edit")
+            edit_btn.setProperty("class", "edit")
+            edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            edit_btn.setFixedSize(60, 24)
             edit_btn.clicked.connect(lambda checked, c=cat: self._open_form(c))
-            del_btn = QPushButton("Excluir")
-            del_btn.setProperty("class", "danger")
-            del_btn.setEnabled(not getattr(cat, "is_system", True))
+            
+            del_btn = QPushButton("Delete")
+            del_btn.setProperty("class", "delete")
+            del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            del_btn.setFixedSize(80, 24)
+            del_btn.setStyleSheet("""
+            QPushButton.delete{
+                color: #d61a1a;
+                padding: 0px;
+                font-size: 12px;
+            }
+            QPushButton.delete:hover{
+                border: 1px solid #fa0202;
+                color: #fa0202
+            }
+            """)
             del_btn.clicked.connect(lambda checked, cid=cat.id: self._delete_category(cid))
+
             actions_layout.addWidget(edit_btn)
             actions_layout.addWidget(del_btn)
             self.table.setCellWidget(row, 4, actions)
@@ -192,7 +215,7 @@ class CategoriesView(QWidget):
             item = self.alert_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
-                
+
         if alert_widgets:
             self.alert_frame.setVisible(True)
             for name, spent, limit in alert_widgets:

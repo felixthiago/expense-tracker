@@ -122,9 +122,11 @@ class ExpensesView(QWidget):
         title.setStyleSheet("font-size: 24px; font-weight: 600;")
         header.addWidget(title)
         header.addStretch()
-        self.add_btn = QPushButton("  Nova despesa")
+
+        self.add_btn = QPushButton("Nova despesa")
         self.add_btn.setProperty("class", "primary")
         self.add_btn.clicked.connect(self._open_form)
+
         header.addWidget(self.add_btn)
         layout.addLayout(header)
 
@@ -265,34 +267,12 @@ class ExpensesView(QWidget):
 
             edit_btn = QPushButton("Edit")
             edit_btn.setProperty("class", "edit")
-            edit_btn.setStyleSheet("""
-            QPushButton.edit{
-                color: #314ede;
-                padding: 0px;
-                font-size: 12px;
-            }
-            QPushButton.edit:hover{
-                color: #1d40f0;
-                border: 1px solid #1d40f0;
-            }
-            """)
             edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             edit_btn.setFixedSize(40, 24)
             edit_btn.clicked.connect(lambda checked, r=row: self._edit_row(r))
 
             del_btn = QPushButton("Delete")
             del_btn.setProperty("class", "delete")
-            del_btn.setStyleSheet("""
-            QPushButton.delete{
-                color: #d61a1a;
-                padding: 0px;
-                font-size: 12px;
-            }
-            QPushButton.delete:hover{
-                border: 1px solid #fa0202;
-                color: #fa0202
-            }
-            """)
             del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             del_btn.setFixedSize(60, 24)
             del_btn.clicked.connect(lambda checked, r=row: self._delete_row(r))

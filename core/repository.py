@@ -203,7 +203,7 @@ def delete_expense(session: Session, expense_id: str) -> bool:
 
 CategoryTotal = tuple[str, str, Decimal]
 def get_total_by_category_in_period(session: Session, date_from: datetime, date_to: datetime) -> list[CategoryTotal]:
-    """Returns list of (category_id, category_name, total)."""
+    """return (category_id, category_name, total)"""
     q = (
         session.query(Category.id, Category.name, func.sum(Expense.amount).label("total"))
         .join(Expense, Expense.category_id == Category.id)
@@ -214,7 +214,7 @@ def get_total_by_category_in_period(session: Session, date_from: datetime, date_
 
 
 def get_monthly_totals(session: Session, months_back: int = 12) -> list[tuple[str, Decimal]]:
-    """Returns a list (year_month, total) for the last x months."""
+    """return (year_month, total) for the last x months."""
     from datetime import date
 
     end = date.today()

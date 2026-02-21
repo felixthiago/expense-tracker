@@ -1,9 +1,13 @@
 
+from turtle import color
+
+
 COLORS = {
     "bg_primary": "#0f0f0f",
     "bg_secondary": "#18181b",
     "bg_tertiary": "#27272a",
-    "bg_card": "#1c1c1e",
+    "bg_card": "#161618",
+    "bg_card_dashboard": "#151519",
     "bg_hover": "#2d2d30",
     "border": "#3f3f46",
     "border_light": "#52525b",
@@ -56,8 +60,16 @@ def get_stylesheet(font_family: str = "Poppins, Segoe UI, sans-serif") -> str:
         color: {COLORS["text_muted"]};
         font-size: 12px;
     }}
-
     
+    QPieSeries{{
+        border-color: transparent;
+
+    }}
+    QChart{{
+        color: {COLORS["text_primary"]};
+        border-color: transparent;
+    }}
+
     /* Line edits */
     QLineEdit, QSpinBox, QDoubleSpinBox, QDateEdit, QComboBox {{
         background-color: {COLORS["bg_tertiary"]};
@@ -121,8 +133,32 @@ def get_stylesheet(font_family: str = "Poppins, Segoe UI, sans-serif") -> str:
         border: 1px solid {COLORS["border"]};
         border-radius: 8px;
         padding: 10px 18px;
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 500;
+    }}
+
+    QPushButton.edit, QPushButton.delete{{
+        padding: 0px;
+    }}
+
+    QPushButton.edit{{
+        color: #314ede;
+        font-size: 12px;
+    }}
+
+    QPushButton.edit:hover{{
+        color: #1d40f0;
+        border: 1px solid #1d40f0;
+    }}
+
+    QPushButton.delete{{
+        color: #d61a1a;
+        font-size: 12px;
+    }}
+
+    QPushButton.delete:hover{{
+        border: 1px solid #fa0202;
+        color: #fa0202
     }}
 
     QPushButton:hover {{
@@ -137,7 +173,6 @@ def get_stylesheet(font_family: str = "Poppins, Segoe UI, sans-serif") -> str:
     QPushButton[class="primary"] {{
         background-color: {COLORS["accent"]};
         color: white;
-        border: none;
     }}
 
     QPushButton[class="primary"]:hover {{

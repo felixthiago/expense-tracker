@@ -10,9 +10,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PyQt6.QtGui import QColor, QPen
 
 from services.expense_service import total_spent, total_by_category, monthly_totals
-from services.category_service import list_categories
+from services.category_service import get_category_color_by_id
 from ui.styles.theme import COLORS
 from .expenses_view import _format_currency
 
@@ -40,6 +41,7 @@ class DashboardView(QScrollArea):
         title.setProperty("class", "title")
         title.setStyleSheet("font-size: 24px; font-weight: 600;")
         layout.addWidget(title)
+
         subtitle = QLabel("Resumo financeiro e visão geral das despesas, mensalmente e anualmente")
         subtitle.setProperty("class", "subtitle")
         layout.addWidget(subtitle)
@@ -49,8 +51,10 @@ class DashboardView(QScrollArea):
         layout.addLayout(self.cards_layout)
 
         self._has_charts = False
+
         charts_widget = QWidget()
         charts_layout = QGridLayout(charts_widget)
+
         self.chart_pie = None
         self.chart_bars = None
         self._build_charts(charts_layout)
@@ -76,7 +80,7 @@ class DashboardView(QScrollArea):
         pie_layout = QVBoxLayout(self.pie_container)
         self.pie_chart_view = QChartView()
         self.pie_chart_view.setMinimumHeight(280)
-        self.pie_chart_view.setStyleSheet("background: transparent;")
+        self.pie_chart_view.setStyleSheet(f"background: transparent; border-radius: 8px; border: 1px solid {COLORS['border']}; padding: 0px;")
 
         pie_layout.addWidget(self.pie_chart_view)
         parent_layout.addWidget(self.pie_container, 0, 0)
@@ -85,8 +89,8 @@ class DashboardView(QScrollArea):
         bar_layout = QVBoxLayout(self.bar_container)
         self.bar_chart_view = QChartView()
         self.bar_chart_view.setMinimumHeight(280)
-        self.bar_chart_view.setStyleSheet("background: transparent;")
-        # self.bar_chart_view.setRenderHint(self.bar_chart_view.RenderHint.Antialiasing)
+        self.bar_chart_view.setStyleSheet(f"background: transparent; border-radius: 8px; border: 1px solid {COLORS['border']};")
+        self.bar_chart_view.setRenderHint(self.bar_chart_view.renderHints().Antialiasing)
         bar_layout.addWidget(self.bar_chart_view)
         parent_layout.addWidget(self.bar_container, 0, 1)
 
@@ -96,59 +100,79 @@ class DashboardView(QScrollArea):
             if item.widget():
                 item.widget().deleteLater()
 
-    def _add_card(self, title: str, value: str, row: int, col: int, subtitle: str = ""):
+    def _add_card(self, title: str, value: str, row: int, col: int, subtitle: str = "", color: str = COLORS["success"], is_money: bool = False):
         card = QFrame()
         card.setProperty("class", "card")
         card.setStyleSheet(f"""
             QFrame {{
-                background-color: {COLORS["bg_card"]};
+                background-color: {COLORS["bg_card_dashboard"]};
                 border: 1px solid {COLORS["border"]};
                 border-radius: 12px;
                 padding: 20px;
+                margin-top: 3px;
             }}
         """)
         card_layout = QVBoxLayout(card)
         card_layout.setSpacing(4)
+
         t = QLabel(title)
-        t.setStyleSheet("font-size: 14px; color: #71717a;")
+        t.setStyleSheet(f"font-size: 14px; color: #fff; font-weight: 400;")
+        t.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card_layout.addWidget(t)
+
         v = QLabel(value)
-        v.setStyleSheet("font-size: 22px; font-weight: 600;")
+        v.setStyleSheet(f"font-size: 24px; font-weight: 500; color: {color};")
+        v.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card_layout.addWidget(v)
+
         if subtitle:
             s = QLabel(subtitle)
-            s.setStyleSheet("font-size: 12px; color: #71717a;")
+            if is_money:
+                color = COLORS["success"]
+            else:
+                color = COLORS["text_secondary"]
+
+            s.setStyleSheet(f"font-size: 12px; color: {color};")
+            s.setAlignment(Qt.AlignmentFlag.AlignCenter)
             card_layout.addWidget(s)
+
         self.cards_layout.addWidget(card, row, col)
 
     def _update_pie_chart(self, data: list[tuple[str, str, Decimal]]):
         if not self._has_charts or not data:
             return
         from PyQt6.QtCharts import QChart, QPieSeries
-        from PyQt6.QtGui import QColor
 
         series = QPieSeries()
 
-        colors_hex = [
-            "#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#ec4899",
-            "#8b5cf6", "#3b82f6", "#64748b"
-        ]
-
         for i, (cid, name, total) in enumerate(data):
+            ccolor = get_category_color_by_id(cid)
             if total <= 0:
-                continue
+                continue    
+
             slice_ = series.append(name, float(total))
-            slice_.setColor(QColor(colors_hex[i % len(colors_hex)]))
+            slice_.setColor(QColor(ccolor))
             slice_.setLabelVisible(True)
+
+            slice_pen = QPen(QColor("#fff"), 1)
+            slice_.setPen(slice_pen)
 
         chart = QChart()
         chart.addSeries(series)
         chart.setTitle("Por categoria")
+        chart.setTitleBrush(QColor(COLORS["text_primary"]))
         chart.setTitleBrush(chart.legend().labelBrush())
-        chart.setBackgroundBrush(QColor(COLORS["bg_card"]))
+        chart.setBackgroundBrush(QColor(COLORS["bg_card_dashboard"]))
+
+        chart_pen = QPen(QColor(COLORS["border"]), 1)
+        chart.setPlotAreaBackgroundPen(chart_pen)
+        chart.setPlotAreaBackgroundVisible(True)
         chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
-        chart.legend().setVisible(True)
-        chart.legend().setAlignment(Qt.AlignmentFlag.AlignBottom)
+
+        legend = chart.legend()
+        legend.setVisible(True)
+        legend.setAlignment(Qt.AlignmentFlag.AlignBottom)
+        legend.setLabelBrush(QColor(COLORS["text_primary"]))
         self.pie_chart_view.setChart(chart)
 
     def _update_bar_chart(self, data: list[tuple[str, Decimal]]):
@@ -191,20 +215,23 @@ class DashboardView(QScrollArea):
         end_today = datetime.combine(today, datetime.max.time())
         start_year = datetime(today.year, 1, 1)
 
-        total_this_month = total_spent(start_month, end_today)
-        total_this_year = total_spent(start_year, end_today)
-        spents = {name: total for _, name, total in total_by_category(start_month, end_today)}
-
-        by_cat = total_by_category(start_month, end_today)
-        monthly = monthly_totals(12)
-
         self._clear_cards()
+
+        total_this_month = total_spent(start_month, end_today)
         self._add_card("Gastos este mês", _format_currency(total_this_month), 0, 0,
                        _month_year_pt(start_month))
+        
+        total_this_year = total_spent(start_year, end_today)    
         self._add_card("Gastos este ano", _format_currency(total_this_year), 0, 1,
                        str(today.year))
-        self._add_card("Categoria com maior gasto ", max(spents), 0, 2, _format_currency(max(spents.values())))
+        
+        totals = total_by_category(start_month, end_today)
+        top_cid, top_name, top_total = max(totals, key=lambda x: x[2])
+        main_color = get_category_color_by_id(top_cid)
+        self._add_card("Categoria com maior gasto ", top_name, 0, 2, _format_currency(top_total), color = main_color, is_money = True)
 
         if self._has_charts:
+            by_cat = total_by_category(start_month, end_today)
+            monthly = monthly_totals(12)
             self._update_pie_chart(by_cat)
             self._update_bar_chart(monthly)

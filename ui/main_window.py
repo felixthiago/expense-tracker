@@ -22,7 +22,6 @@ from ui.styles.fonts import load_fonts
 
 
 class NavButton(QPushButton):
-    """Sidebar navigation button with optional active state."""
     def __init__(self, text: str, icon_char: str = "", parent=None):
         super().__init__(parent)
         self.setText(f"  {icon_char}  {text}" if icon_char else f"  {text}")
@@ -33,7 +32,6 @@ class NavButton(QPushButton):
 
 
 class MainWindow(QMainWindow):
-    """Main window with sidebar and stacked content."""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Expense Tracker")
@@ -49,7 +47,6 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Sidebar
         sidebar = QFrame()
         sidebar.setObjectName("sidebar")
         sidebar.setFixedWidth(260)
@@ -77,14 +74,12 @@ class MainWindow(QMainWindow):
         sidebar_layout.setContentsMargins(12, 24, 12, 24)
         sidebar_layout.setSpacing(4)
 
-        # Logo / title
         title = QLabel("Expense Tracker")
         title.setProperty("class", "title")
-        title.setStyleSheet("font-size: 24px; font-weight: 900; margin-left: 4px; color: #FFF")
+        title.setStyleSheet("font-size: 24px; font-weight: 900; margin-left: 4px; color: #FFF; background-color: transparent; font-style: bold;")
         sidebar_layout.addWidget(title)
         sidebar_layout.addSpacing(8)
 
-        # Stacked content
         self.stack = QStackedWidget()
         self.stack.setStyleSheet("background: transparent;")
 
@@ -126,7 +121,6 @@ class MainWindow(QMainWindow):
             self.categories_view.refresh()
 
     def refresh_current_view(self):
-        """Refresh the currently visible view."""
         idx = self.stack.currentIndex()
         if idx == 0:
             self.dashboard_view.refresh()
