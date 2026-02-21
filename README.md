@@ -4,8 +4,9 @@ Aplicação desktop para gerenciar algumas despesas pessoais, com banco de dados
 
 ## Aplicação em uso
 
-![Aplicação em uso](resources/imgs/expense_tracker.png)
-
+![Aplicação em uso - Dashboard](resources/imgs/expense_tracker.png)
+![Aplicação em uso - Expenses](resources/img/expense_tracker_categories.png)
+![Aplicação em uso - Categories](resources/img/expense_tracker_categories.png)
 
 ## Requisitos
 
