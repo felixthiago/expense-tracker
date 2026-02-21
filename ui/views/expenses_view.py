@@ -26,7 +26,7 @@ from PyQt6.QtWidgets import (
 from services.expense_service import list_expenses, add_expense, update_expense, remove_expense, get_expense
 from services.category_service import list_categories, get_category
 from services.export_service import export_csv, export_pdf
-from ui.styles.theme import COLORS
+# from ui.styles.theme import COLORS
 
 
 def _format_currency(value: Decimal) -> str:
@@ -136,6 +136,7 @@ class ExpensesView(QWidget):
         self.filter_date_to = QDateEdit()
         self.filter_date_to.setCalendarPopup(True)
         self.filter_date_to.setDate(date.today())
+
         self.filter_category = QComboBox()
         self.filter_category.addItem("Todas", None)
         self.filter_apply = QPushButton("Aplicar")
@@ -151,9 +152,14 @@ class ExpensesView(QWidget):
         layout.addWidget(filters)
 
         self.table = QTableWidget()
+        self.table.setColumnWidth(5, 150)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["Data", "Valor", "Categoria", "Descrição", "Banco", "Ações"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(50)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
         layout.addWidget(self.table)
@@ -232,31 +238,63 @@ class ExpensesView(QWidget):
         date_to = datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time())
         cat_id = self.filter_category.currentData()
         expenses = list_expenses(date_from=date_from, date_to=date_to, category_id=cat_id)
-        # print(expenses)
         self.table.setRowCount(len(expenses))
+
         for row, e in enumerate(expenses):
             category = get_category(str(e.category_id))
+            data = [
+                e.date.strftime("%d/%m/%Y") if e.date else "",
+                _format_currency(e.amount),
+                category.name if category else "no category relationship",
+                (e.description or "")[:25],
+                str(e.source or ""),
+            ]
 
-            self.table.setItem(row, 0, QTableWidgetItem(e.date.strftime("%d/%m/%Y") if e.date else ""))
-            self.table.item(row, 0).setData(Qt.ItemDataRole.UserRole, e.id)
-            self.table.setItem(row, 1, QTableWidgetItem(_format_currency(e.amount)))
-            self.table.setItem(row, 2, QTableWidgetItem(str(category.name) if category else "no category relationship"))
-            self.table.setItem(row, 3, QTableWidgetItem(str((e.description or ""))[:25]))
-            self.table.setItem(row, 4, QTableWidgetItem(str(e.source or "")))
-
+            for col, val in enumerate(data):
+                item = QTableWidgetItem(val)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                if col == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, e.id)
+                self.table.setItem(row, col, item)
+            
             actions = QWidget()
             actions_layout = QHBoxLayout(actions)
-            actions_layout.setContentsMargins(4, 0, 4, 0)
+            actions_layout.setContentsMargins(0, 0, 0, 0)
+            actions_layout.setSpacing(6)
+            actions_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             edit_btn = QPushButton("Edit")
+            edit_btn.setProperty("class", "edit")
+            edit_btn.setStyleSheet("""
+            QPushButton.edit{
+                color: #314ede;
+                padding: 0px;
+                font-size: 12px;
+            }
+            QPushButton.edit:hover{
+                color: #1d40f0;
+                border: 1px solid #1d40f0;
+            }
+            """)
             edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            edit_btn.setFixedSize(20, 20)
+            edit_btn.setFixedSize(40, 24)
             edit_btn.clicked.connect(lambda checked, r=row: self._edit_row(r))
 
-            del_btn = QPushButton("Del")
+            del_btn = QPushButton("Delete")
+            del_btn.setProperty("class", "delete")
+            del_btn.setStyleSheet("""
+            QPushButton.delete{
+                color: #d61a1a;
+                padding: 0px;
+                font-size: 12px;
+            }
+            QPushButton.delete:hover{
+                border: 1px solid #fa0202;
+                color: #fa0202
+            }
+            """)
             del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            del_btn.setFixedSize(20, 20)
-            del_btn.setProperty("class", "danger")
+            del_btn.setFixedSize(60, 24)
             del_btn.clicked.connect(lambda checked, r=row: self._delete_row(r))
             
             actions_layout.addWidget(edit_btn)

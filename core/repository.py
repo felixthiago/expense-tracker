@@ -182,7 +182,7 @@ def update_expense(
     if not exp:
         return None
     if amount is not None:
-        exp.amount = amount
+        exp.amount = amount if not None else exp.amount
     if date is not None:
         exp.date = date
     if category_id is not None:
@@ -201,10 +201,8 @@ def delete_expense(session: Session, expense_id: str) -> bool:
     session.delete(exp)
     return True
 
-
-def get_total_by_category_in_period(
-    session: Session, date_from: datetime, date_to: datetime
-) -> list[tuple[str, str, Decimal]]:
+CategoryTotal = tuple[str, str, Decimal]
+def get_total_by_category_in_period(session: Session, date_from: datetime, date_to: datetime) -> list[CategoryTotal]:
     """Returns list of (category_id, category_name, total)."""
     q = (
         session.query(Category.id, Category.name, func.sum(Expense.amount).label("total"))
@@ -215,14 +213,11 @@ def get_total_by_category_in_period(
     return [(r.id, r.name, r.total or Decimal("0")) for r in q.all()]
 
 
-def get_monthly_totals(
-    session: Session, months_back: int = 12
-) -> list[tuple[str, Decimal]]:
-    """Returns list of (year_month, total) for the last N months."""
+def get_monthly_totals(session: Session, months_back: int = 12) -> list[tuple[str, Decimal]]:
+    """Returns a list (year_month, total) for the last x months."""
     from datetime import date
 
     end = date.today()
-    # Approximate start: subtract months
     year, month = end.year, end.month
     month -= months_back
     while month <= 0:
@@ -244,9 +239,7 @@ def get_monthly_totals(
     return [(r.ym, r.total or Decimal("0")) for r in rows]
 
 
-def get_total_spent_in_period(
-    session: Session, date_from: datetime, date_to: datetime
-) -> Decimal:
+def get_total_spent_in_period(session: Session, date_from: datetime, date_to: datetime) -> Decimal:
     result = (
         session.query(func.coalesce(func.sum(Expense.amount), 0))
         .filter(Expense.date >= date_from, Expense.date <= date_to)

@@ -149,7 +149,7 @@ def get_stylesheet(font_family: str = "Poppins, Segoe UI, sans-serif") -> str:
     }}
 
     QPushButton[class="danger"] {{
-        background-color: {COLORS["danger"]};
+        background-color: #cc0011;
         color: #f11111;
         border: none;
     }}

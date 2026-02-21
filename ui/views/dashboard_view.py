@@ -14,13 +14,10 @@ from PyQt6.QtWidgets import (
 from services.expense_service import total_spent, total_by_category, monthly_totals
 from services.category_service import list_categories
 from ui.styles.theme import COLORS
+from .expenses_view import _format_currency
 
 MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho",
             "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
-
-def _format_currency(value: Decimal) -> str:
-    return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
 
 def _month_year_pt(dt: datetime) -> str:
     return f"{MESES[dt.month - 1]} {dt.year}"
@@ -113,14 +110,14 @@ class DashboardView(QScrollArea):
         card_layout = QVBoxLayout(card)
         card_layout.setSpacing(4)
         t = QLabel(title)
-        t.setStyleSheet("font-size: 12px; color: #71717a;")
+        t.setStyleSheet("font-size: 14px; color: #71717a;")
         card_layout.addWidget(t)
         v = QLabel(value)
         v.setStyleSheet("font-size: 22px; font-weight: 600;")
         card_layout.addWidget(v)
         if subtitle:
             s = QLabel(subtitle)
-            s.setStyleSheet("font-size: 11px; color: #71717a;")
+            s.setStyleSheet("font-size: 12px; color: #71717a;")
             card_layout.addWidget(s)
         self.cards_layout.addWidget(card, row, col)
 
@@ -196,6 +193,8 @@ class DashboardView(QScrollArea):
 
         total_this_month = total_spent(start_month, end_today)
         total_this_year = total_spent(start_year, end_today)
+        spents = {name: total for _, name, total in total_by_category(start_month, end_today)}
+
         by_cat = total_by_category(start_month, end_today)
         monthly = monthly_totals(12)
 
@@ -204,7 +203,7 @@ class DashboardView(QScrollArea):
                        _month_year_pt(start_month))
         self._add_card("Gastos este ano", _format_currency(total_this_year), 0, 1,
                        str(today.year))
-        self._add_card("Categorias com gastos", str(len(by_cat)), 0, 2)
+        self._add_card("Categoria com maior gasto ", max(spents), 0, 2, _format_currency(max(spents.values())))
 
         if self._has_charts:
             self._update_pie_chart(by_cat)

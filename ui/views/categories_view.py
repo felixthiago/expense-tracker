@@ -17,14 +17,15 @@ from PyQt6.QtWidgets import (
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
-    QWidget,
+    QWidget
 )
+from PyQt6.QtGui import QColor, QBrush
 
 from core.database import session_scope
 from core import repository as repo
 from services.category_service import list_categories, create_category, update_category, delete_category
 from ui.styles.theme import COLORS
-
+from .expenses_view import _format_currency
 
 class CategoryFormDialog(QDialog):
     def __init__(self, parent=None, category=None):
@@ -112,11 +113,15 @@ class CategoriesView(QWidget):
         layout.addWidget(self.alert_frame)
 
         self.table = QTableWidget()
+        self.table.setColumnWidth(0, 200)
         self.table.setColumnCount(5)
+        self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setHorizontalHeaderLabels(["Nome", "Cor", "Limite mensal", "Gasto atual*", "Ações"])
+        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.table)
-
-        # layout.addWidget(QLabel("* Gasto no mês atual (resumo)"))
         self.refresh()
 
     def _open_form(self, category=None):
@@ -151,25 +156,24 @@ class CategoriesView(QWidget):
         with session_scope() as session:
             totals = repo.get_total_by_category_in_period(session, start_month, end_month)
             spent_by_cat = {cid: total for cid, _, total in totals}
-
+            
         alert_widgets = []
         for row, cat in enumerate(categories):
-            self.table.setItem(row, 0, QTableWidgetItem(cat.name))
-            color_item = QTableWidgetItem(cat.color or "")
-            color_item.setForeground(Qt.GlobalColor.white)
-            self.table.setItem(row, 1, color_item)
-
             limit = cat.monthly_limit or Decimal("0")
-            limit_str = f"R$ {limit:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if limit else "—"
-            self.table.setItem(row, 2, QTableWidgetItem(limit_str))
-
-            spent = spent_by_cat.get(cat.id, Decimal("0"))
-            spent_str = f"R$ {spent:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-            self.table.setItem(row, 3, QTableWidgetItem(spent_str))
-
-            # Alert if over limit
-            if limit and limit > 0 and spent >= limit:
-                alert_widgets.append((cat.name, spent, limit))
+            spent = spent_by_cat.get(str(cat.id), Decimal("0"))
+            
+            data = [
+                cat.name,
+                cat.color or "",
+                _format_currency(limit) if float(limit) > 0 else "-",
+                _format_currency(spent),
+            ]
+            
+            for col, value in enumerate(data):
+                item = QTableWidgetItem(value)
+                if col == 1:
+                    item.setForeground(QColor(item.text() or "#000000"))
+                self.table.setItem(row, col, item)
 
             actions = QWidget()
             actions_layout = QHBoxLayout(actions)
@@ -188,6 +192,7 @@ class CategoriesView(QWidget):
             item = self.alert_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+                
         if alert_widgets:
             self.alert_frame.setVisible(True)
             for name, spent, limit in alert_widgets:
@@ -203,7 +208,7 @@ class CategoriesView(QWidget):
                     }}
                 """)
                 alert_layout = QHBoxLayout(alert)
-                alert_layout.addWidget(QLabel(f"⚠ Limite atingido/ultrapassado: {name} (gasto: R$ {spent:,.2f}, limite: R$ {limit:,.2f})"))
+                alert_layout.addWidget(QLabel(f"Limite atingido/ultrapassado: {name} (gasto: R$ {spent:,.2f}, limite: R$ {limit:,.2f})"))
                 self.alert_layout.addWidget(alert)
         else:
             self.alert_frame.setVisible(False)

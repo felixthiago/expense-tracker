@@ -14,7 +14,11 @@ def list_categories():
 def get_category(category_id: str):
     with session_scope() as session:
         return repo.get_category_by_id(session, category_id)
-
+    
+def get_category_color(category_id: str) -> Optional[str]:
+    with session_scope() as session:
+        cat = repo.get_category_by_id(session, category_id)
+        return cat.color
 
 def create_category(
     name: str,
