@@ -1,8 +1,8 @@
 import sys
 
-from PyQt6.QtCore import Qt
+
 from PyQt6.QtWidgets import QApplication, QStyle
-# from PyQt6.QtGui import QICon
+from PyQt6.QtCore import Qt
 
 from app.config import APP_NAME
 from core.database import init_db
@@ -11,11 +11,11 @@ from ui.main_window import MainWindow
 def main():
     init_db()
     
-    app = QApplication(sys.argv)
-    
-    app.setHighDpiScaleFactorRoundingPolicy(
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
+    
+    app = QApplication(sys.argv)
 
     app.setWindowIcon(app.style().standardIcon(getattr(QStyle.StandardPixmap, "SP_ComputerIcon")))
     app.setApplicationName(APP_NAME)

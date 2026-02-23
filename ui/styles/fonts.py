@@ -1,5 +1,3 @@
-"""Load Poppins font if available."""
-import os
 from pathlib import Path
 
 from PyQt6.QtGui import QFontDatabase

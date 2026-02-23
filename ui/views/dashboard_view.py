@@ -17,12 +17,12 @@ from services.category_service import get_category_color_by_id
 from ui.styles.theme import COLORS
 from .expenses_view import _format_currency
 
+
 MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho",
             "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
 
 def _month_year_pt(dt: datetime) -> str:
-    return f"{MESES[dt.month - 1]} {dt.year}"
-
+    return f"{MESES[dt.month - 1]}, {dt.year}"
 
 class DashboardView(QScrollArea):
     def __init__(self, parent=None):
@@ -32,6 +32,7 @@ class DashboardView(QScrollArea):
         self.setStyleSheet("QScrollArea { background: transparent; border: none; }")
         self._content = QWidget()
         self.setWidget(self._content)
+
         layout = QVBoxLayout(self._content)
         layout.setContentsMargins(32, 32, 32, 32)
         layout.setSpacing(24)
@@ -68,13 +69,15 @@ class DashboardView(QScrollArea):
 
             self._has_charts = True
 
-        except ImportError:
+
+        except ImportError as e:
             self._has_charts = False
+            print(self._has_charts, e)
+
             no_charts = QLabel("Instale PyQt6-Charts para ver gráficos: pip install PyQt6-Charts")
             no_charts.setStyleSheet("color: #71717a; padding: 24px;")
             parent_layout.addWidget(no_charts, 0, 0, 1, 2)
             return
-
 
         self.pie_container = QWidget()
         pie_layout = QVBoxLayout(self.pie_container)
@@ -100,50 +103,58 @@ class DashboardView(QScrollArea):
             if item.widget():
                 item.widget().deleteLater()
 
+
     def _add_card(self, title: str, value: str, row: int, col: int, subtitle: str = "", color: str = COLORS["success"], is_money: bool = False):
-        card = QFrame()
-        card.setProperty("class", "card")
-        card.setStyleSheet(f"""
-            QFrame {{
-                background-color: {COLORS["bg_card_dashboard"]};
-                border: 1px solid {COLORS["border"]};
-                border-radius: 12px;
-                padding: 20px;
-                margin-top: 3px;
-            }}
-        """)
-        card_layout = QVBoxLayout(card)
-        card_layout.setSpacing(4)
+            card = QFrame()
+            card.setProperty("class", "card")
+            card.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {COLORS["bg_card_dashboard"]};
+                    border: 1px solid {COLORS["border"]};
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-top: 3px;
+                }}
+            """)
+            card_layout = QVBoxLayout(card)
+            card_layout.setSpacing(4)
 
-        t = QLabel(title)
-        t.setStyleSheet(f"font-size: 14px; color: #fff; font-weight: 400;")
-        t.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        card_layout.addWidget(t)
+            t = QLabel(title)
+            t.setStyleSheet(f"font-size: 14px; color: #fff; font-weight: 400;")
+            t.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            card_layout.addWidget(t)
 
-        v = QLabel(value)
-        v.setStyleSheet(f"font-size: 24px; font-weight: 500; color: {color};")
-        v.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        card_layout.addWidget(v)
+            v = QLabel(value)
+            v.setStyleSheet(f"font-size: 24px; font-weight: 500; color: {color};")
+            v.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            card_layout.addWidget(v)
 
-        if subtitle:
-            s = QLabel(subtitle)
-            if is_money:
-                color = COLORS["success"]
-            else:
-                color = COLORS["text_secondary"]
+            if subtitle:
+                s = QLabel(subtitle)
+                if is_money:
+                    color = COLORS["success"]
+                else:
+                    color = COLORS["text_secondary"]
 
-            s.setStyleSheet(f"font-size: 12px; color: {color};")
-            s.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            card_layout.addWidget(s)
+                s.setStyleSheet(f"font-size: 12px; color: {color};")
+                s.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                card_layout.addWidget(s)
 
-        self.cards_layout.addWidget(card, row, col)
+            self.cards_layout.addWidget(card, row, col)
 
     def _update_pie_chart(self, data: list[tuple[str, str, Decimal]]):
-        if not self._has_charts or not data:
+        if not self._has_charts:
             return
-        from PyQt6.QtCharts import QChart, QPieSeries
 
+        from PyQt6.QtCharts import QChart, QPieSeries
         series = QPieSeries()
+
+        if not data:
+            self.pie_chart_view.setChart(QChart())
+            slice_ = series.append("Nenhum Gasto", 1)
+            slice_.setColor(QColor(COLORS["bg_tertiary"]))
+            slice_.setLabelVisible(False)
+            slice_.setExploded(False)
 
         for i, (cid, name, total) in enumerate(data):
             ccolor = get_category_color_by_id(cid)
@@ -156,6 +167,7 @@ class DashboardView(QScrollArea):
 
             slice_pen = QPen(QColor("#fff"), 1)
             slice_.setPen(slice_pen)
+    
 
         chart = QChart()
         chart.addSeries(series)
@@ -170,16 +182,23 @@ class DashboardView(QScrollArea):
         chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
 
         legend = chart.legend()
-        legend.setVisible(True)
-        legend.setAlignment(Qt.AlignmentFlag.AlignBottom)
-        legend.setLabelBrush(QColor(COLORS["text_primary"]))
+        
+        if legend:
+            legend.setVisible(True)
+            legend.setAlignment(Qt.AlignmentFlag.AlignBottom)
+            legend.setLabelBrush(QColor(COLORS["text_primary"]))
+
         self.pie_chart_view.setChart(chart)
 
     def _update_bar_chart(self, data: list[tuple[str, Decimal]]):
-        if not self._has_charts or not data:
+        if not self._has_charts:
             return
+        
         from PyQt6.QtCharts import QChart, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
         from PyQt6.QtGui import QColor
+
+        if not data:
+            self.bar_chart_view.setChart(QChart())
 
         bar_set = QBarSet("Despesas (R$)")
         bar_set.setColor(QColor(COLORS["accent"]))
@@ -218,20 +237,21 @@ class DashboardView(QScrollArea):
         self._clear_cards()
 
         total_this_month = total_spent(start_month, end_today)
-        self._add_card("Gastos este mês", _format_currency(total_this_month), 0, 0,
-                       _month_year_pt(start_month))
+        self._add_card("Gastos este mês", _format_currency(total_this_month), 0, 0, _month_year_pt(start_month)) if float(total_this_month) > 0 else self._add_card("Gastos este mês", _format_currency(Decimal("0")), 0, 0, _month_year_pt(start_month))
         
-        total_this_year = total_spent(start_year, end_today)    
+        total_this_year = total_spent(start_year, end_today)
         self._add_card("Gastos este ano", _format_currency(total_this_year), 0, 1,
-                       str(today.year))
+                       str(today.year)) if float(total_this_year) > 0 else self._add_card("Gastos esse ano", _format_currency(Decimal("0")), 0, 1, str(today.year))
         
         totals = total_by_category(start_month, end_today)
-        top_cid, top_name, top_total = max(totals, key=lambda x: x[2])
+        top_cid, top_name, top_total = max(totals, key=lambda x: x[2]) if totals else (0, "Nenhum gasto", Decimal("0"))
         main_color = get_category_color_by_id(top_cid)
+
         self._add_card("Categoria com maior gasto ", top_name, 0, 2, _format_currency(top_total), color = main_color, is_money = True)
 
         if self._has_charts:
             by_cat = total_by_category(start_month, end_today)
             monthly = monthly_totals(12)
+
             self._update_pie_chart(by_cat)
             self._update_bar_chart(monthly)

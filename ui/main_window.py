@@ -1,4 +1,3 @@
-"""Main application window with sidebar navigation."""
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
     QFrame,
@@ -20,7 +19,6 @@ from ui.views.categories_view import CategoriesView
 from ui.styles.theme import get_stylesheet, COLORS
 from ui.styles.fonts import load_fonts
 
-
 class NavButton(QPushButton):
     def __init__(self, text: str, icon_char: str = "", parent=None):
         super().__init__(parent)
@@ -29,7 +27,6 @@ class NavButton(QPushButton):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(44)
         self.setProperty("nav", True)
-
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -43,6 +40,7 @@ class MainWindow(QMainWindow):
 
         central = QWidget()
         self.setCentralWidget(central)
+
         layout = QHBoxLayout(central)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -57,9 +55,10 @@ class MainWindow(QMainWindow):
             }}
             QPushButton[nav="true"] {{
                 text-align: left;
+                font-size: 20px;
                 border: none;
                 border-radius: 8px;
-                margin: 2px 12px;
+                margin: 8px 0px;
             }}
             QPushButton[nav="true"]:checked {{
                 background-color: {COLORS["accent_soft"]};
@@ -76,7 +75,7 @@ class MainWindow(QMainWindow):
 
         title = QLabel("Expense Tracker")
         title.setProperty("class", "title")
-        title.setStyleSheet("font-size: 24px; font-weight: 900; margin-left: 4px; color: #FFF; background-color: transparent; font-style: bold;")
+        title.setStyleSheet("font-size: 24px; font-weight: 900; margin: 8px 6px; color: #FFF; background-color: transparent; font-style: bold;")
         sidebar_layout.addWidget(title)
         sidebar_layout.addSpacing(8)
 
@@ -92,9 +91,9 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.categories_view)
 
         nav_items = [
-            ("dashboard", "📊", 0),
-            ("expenses", "📝", 1),
-            ("categories", "📁", 2),
+            ("Dashboard", "📊", 0),
+            ("Expenses", "📝", 1),
+            ("Categories", "📁", 2),
         ]
 
         self.nav_buttons = []
@@ -133,3 +132,4 @@ class MainWindow(QMainWindow):
         btn = NavButton(text, icon)
         btn.clicked.connect(lambda checked, i = index: self._go_to(i))
         return btn
+    

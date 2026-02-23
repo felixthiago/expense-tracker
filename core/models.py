@@ -1,7 +1,4 @@
-"""SQLAlchemy models for Expense Tracker."""
 from datetime import datetime
-from decimal import Decimal
-
 from sqlalchemy import (
     Boolean,
     Column,
@@ -17,16 +14,15 @@ from sqlalchemy.orm import DeclarativeBase, relationship
 class Base(DeclarativeBase):
     pass
 
-
 class Category(Base):
     __tablename__ = "categories"
 
     id = Column(String(36), primary_key=True)
     name = Column(String(100), nullable=False, unique=True)
-    color = Column(String(7), default="#6366f1")  # Hex color
-    icon = Column(String(50), default="")  # Optional icon name
-    monthly_limit = Column(Numeric(15, 2), nullable=True)  # Max spending per month
-    is_system = Column(Boolean, default=False)  # System categories not deletable
+    color = Column(String(7), default="#6366f1")
+    icon = Column(String(50), default="")
+    monthly_limit = Column(Numeric(15, 2), nullable=True) 
+    is_system = Column(Boolean, default = False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -35,7 +31,6 @@ class Category(Base):
 
     def __repr__(self):
         return f"<Category {self.name}>"
-
 
 class CategoryLimit(Base):
     __tablename__ = "category_limits"
@@ -51,7 +46,6 @@ class CategoryLimit(Base):
     def __repr__(self):
         return f"<CategoryLimit category={self.category_id} month={self.month}>"
 
-# no cap fr 
 class Expense(Base):
     __tablename__ = "expenses"
 
@@ -60,7 +54,7 @@ class Expense(Base):
     date = Column(DateTime, nullable=False)
     category_id = Column(String(36), ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False)
     description = Column(Text, default="")
-    source = Column(String(50), default="")  # e.g. "Nubank" or "Mercado Pago"
+    source = Column(String(50), default="")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

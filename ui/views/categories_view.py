@@ -174,6 +174,7 @@ class CategoriesView(QWidget):
             
             for col, value in enumerate(data):
                 item = QTableWidgetItem(value)
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 if col == 1:
                     item.setForeground(QColor(item.text() or "#000000"))
                 self.table.setItem(row, col, item)

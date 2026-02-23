@@ -32,6 +32,7 @@ def _seed_default_categories(engine):
         count = session.query(Category).count()
         if count > 0:
             return
+        
         defaults = [
             ("cat_1", "Alimentação", "#22c55e", True),
             ("cat_2", "Transporte", "#3b82f6", True),
@@ -41,6 +42,7 @@ def _seed_default_categories(engine):
             ("cat_6", "Compras", "#ec4899", True),
             ("cat_7", "Outros", "#64748b", True),
         ]
+
         for cid, name, color, is_system in defaults:
             cat = Category(id=cid, name=name, color=color, is_system=is_system)
             session.add(cat)

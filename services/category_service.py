@@ -18,12 +18,15 @@ def get_category(category_id: str):
 def get_category_color_by_id(category_id: str) -> str:
     with session_scope() as session:
         c = repo.get_category_by_id(session, category_id)
-        return c.color if c else "#6366f1"
+        return str(c.color) if c else "#6366f1"
 
 def get_category_color_by_name(category_name: str) -> str:
     with session_scope() as session:
         c = repo.get_category_by_name(session, category_name)
-        return c.color if c else "#6366f1"
+        return str(c.color) if c else "#6366f1"
+
+def get_top_category_info():
+    pass
 
 def create_category(
     name: str,
