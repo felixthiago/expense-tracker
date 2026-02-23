@@ -13,7 +13,7 @@ from core.models import Category, CategoryLimit, Expense
 def _uuid():
     return str(uuid.uuid4())
 
-# ---------- Categories ----------
+# ---------- Categories and limits ----------
 
 def get_all_categories(session: Session) -> list[Category]:
     return session.query(Category).order_by(Category.name).all()
@@ -77,7 +77,7 @@ def delete_category(session: Session, category_id: str) -> bool:
 def set_category_limit_for_month(
     session: Session, category_id: str, year_month: str, limit_value: Decimal
 ) -> CategoryLimit:
-    """Set or update spending limit for a category in a given month (YYYY-MM)."""
+    """set or update spending limit for a category in a given month (YYYY-MM)."""
     existing = (
         session.query(CategoryLimit)
         .filter(
@@ -140,7 +140,6 @@ def create_expense(
 def get_expense_by_id(session: Session, expense_id: str) -> Optional[Expense]:
     return session.query(Expense).filter(Expense.id == expense_id).first()
 
-
 def get_expenses(
     session: Session,
     date_from: Optional[datetime] = None,
@@ -201,9 +200,8 @@ def delete_expense(session: Session, expense_id: str) -> bool:
     session.delete(exp)
     return True
 
-CategoryTotal = tuple[str, str, Decimal]
-def get_total_by_category_in_period(session: Session, date_from: datetime, date_to: datetime) -> list[CategoryTotal]:
-    """return (category_id, category_name, total)"""
+CategoryTotal = list[tuple[str, str, Decimal]] # (category_id, category_name, total)
+def get_total_by_category_in_period(session: Session, date_from: datetime, date_to: datetime) -> CategoryTotal:
     q = (
         session.query(Category.id, Category.name, func.sum(Expense.amount).label("total"))
         .join(Expense, Expense.category_id == Category.id)
@@ -212,9 +210,8 @@ def get_total_by_category_in_period(session: Session, date_from: datetime, date_
     )
     return [(r.id, r.name, r.total or Decimal("0")) for r in q.all()]
 
-
-def get_monthly_totals(session: Session, months_back: int = 12) -> list[tuple[str, Decimal]]:
-    """return (year_month, total) for the last x months."""
+MonthlyTotal = list[tuple[str, Decimal]] # (year_month, total) for last x months
+def get_monthly_totals(session: Session, months_back: int = 12) -> MonthlyTotal:
     from datetime import date
 
     end = date.today()

@@ -15,14 +15,9 @@ from PyQt6.QtGui import QColor, QPen
 from services.expense_service import total_spent, total_by_category, monthly_totals
 from services.category_service import get_category_color_by_id
 from ui.styles.theme import COLORS
-from .expenses_view import _format_currency
 
-
-MESES = ("janeiro", "fevereiro", "março", "abril", "maio", "junho",
-            "julho", "agosto", "setembro", "outubro", "novembro", "dezembro")
-
-def _month_year_pt(dt: datetime) -> str:
-    return f"{MESES[dt.month - 1]}, {dt.year}"
+from ..utils import _format_currency
+from ..utils import _month_year_pt
 
 class DashboardView(QScrollArea):
     def __init__(self, parent=None):
@@ -100,9 +95,9 @@ class DashboardView(QScrollArea):
     def _clear_cards(self):
         while self.cards_layout.count():
             item = self.cards_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
+            wid = item.widget() if item else None
+            if wid:
+                wid.deleteLater()
 
     def _add_card(self, title: str, value: str, row: int, col: int, subtitle: str = "", color: str = COLORS["success"], is_money: bool = False):
             card = QFrame()
@@ -149,42 +144,38 @@ class DashboardView(QScrollArea):
         from PyQt6.QtCharts import QChart, QPieSeries
         series = QPieSeries()
 
-        if not data:
-            self.pie_chart_view.setChart(QChart())
+        valid_data = [(cid, cname, total) for cid, cname, total in data if total > 0]
+        if not valid_data:
             slice_ = series.append("Nenhum Gasto", 1)
-            slice_.setColor(QColor(COLORS["bg_tertiary"]))
-            slice_.setLabelVisible(False)
-            slice_.setExploded(False)
-
-        for i, (cid, name, total) in enumerate(data):
-            ccolor = get_category_color_by_id(cid)
-            if total <= 0:
-                continue    
-
-            slice_ = series.append(name, float(total))
-            slice_.setColor(QColor(ccolor))
-            slice_.setLabelVisible(True)
-
-            slice_pen = QPen(QColor("#fff"), 1)
-            slice_.setPen(slice_pen)
-    
+            if slice_:
+                slice_.setColor(QColor(COLORS["bg_tertiary"]))
+                slice_.setLabelVisible(True)
+                slice_.setLabelBrush(QColor(COLORS["text_secondary"]))
+                slice_.setPen(QPen(Qt.PenStyle.NoPen))
+        else:
+            for cid, cname, total in valid_data:
+                ccolor = get_category_color_by_id(cid)
+                slice_ = series.append(cname, float(total))
+                if slice_:
+                    slice_.setColor(QColor(ccolor))
+                    slice_.setLabelVisible(True)
+                    slice_.setLabelBrush(QColor(COLORS["text_primary"]))
+                    slice_.setPen(QPen(QColor(COLORS['bg_card']), 1))
 
         chart = QChart()
         chart.addSeries(series)
         chart.setTitle("Por categoria")
         chart.setTitleBrush(QColor(COLORS["text_primary"]))
-        chart.setTitleBrush(chart.legend().labelBrush())
         chart.setBackgroundBrush(QColor(COLORS["bg_card_dashboard"]))
+        chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
 
         chart_pen = QPen(QColor(COLORS["border"]), 1)
         chart.setPlotAreaBackgroundPen(chart_pen)
         chart.setPlotAreaBackgroundVisible(True)
-        chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
-
-        legend = chart.legend()
         
+        legend = chart.legend()
         if legend:
-            legend.setVisible(True)
+            legend.setVisible(len(valid_data) > 0)
             legend.setAlignment(Qt.AlignmentFlag.AlignBottom)
             legend.setLabelBrush(QColor(COLORS["text_primary"]))
 
@@ -213,6 +204,7 @@ class DashboardView(QScrollArea):
         chart = QChart()
         chart.addSeries(series)
         chart.setTitle("Evolução mensal")
+        chart.setTitleBrush(QColor(COLORS["text_primary"]))
         chart.setBackgroundBrush(QColor(COLORS["bg_card"]))
         chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
 
@@ -224,8 +216,10 @@ class DashboardView(QScrollArea):
         axis_y = QValueAxis()
         chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
         series.attachAxis(axis_y)
-
-        chart.legend().setVisible(False)
+        
+        legend = chart.legend()
+        legend.setVisible(False) if legend else None
+        
         self.bar_chart_view.setChart(chart)
 
     def refresh(self):
@@ -245,7 +239,7 @@ class DashboardView(QScrollArea):
         
         totals = total_by_category(start_month, end_today)
         top_cid, top_name, top_total = max(totals, key=lambda x: x[2]) if totals else (0, "Nenhum gasto", Decimal("0"))
-        main_color = get_category_color_by_id(top_cid)
+        main_color = get_category_color_by_id(str(top_cid))
 
         self._add_card("Categoria com maior gasto ", top_name, 0, 2, _format_currency(top_total), color = main_color, is_money = True)
 

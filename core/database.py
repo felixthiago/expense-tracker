@@ -36,11 +36,11 @@ def _seed_default_categories(engine):
         defaults = [
             ("cat_1", "Alimentação", "#22c55e", True),
             ("cat_2", "Transporte", "#3b82f6", True),
-            ("cat_3", "Moradia", "#8b5cf6", True),
-            ("cat_4", "Saúde", "#ef4444", True),
+            ("cat_3", "Moradia", "#8b5cf6", False),
+            ("cat_4", "Saúde", "#ef4444", False),
             ("cat_5", "Lazer", "#f59e0b", True),
-            ("cat_6", "Compras", "#ec4899", True),
-            ("cat_7", "Outros", "#64748b", True),
+            ("cat_6", "Compras", "#ec4899", False),
+            ("cat_7", "Outros", "#64748b", False),
         ]
 
         for cid, name, color, is_system in defaults:

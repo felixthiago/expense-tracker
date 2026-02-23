@@ -26,7 +26,7 @@ from core.database import session_scope
 from core import repository as repo
 from services.category_service import list_categories, create_category, update_category, delete_category
 from ui.styles.theme import COLORS
-from .expenses_view import _format_currency
+from ..utils import _format_currency
 
 class CategoryFormDialog(QDialog):
     def __init__(self, parent=None, category=None):
@@ -162,7 +162,7 @@ class CategoriesView(QWidget):
             
         alert_widgets = []
         for row, cat in enumerate(categories):
-            limit = cat.monthly_limit or Decimal("0")
+            limit = Decimal(str(cat.monthly_limit)) if cat.monthly_limit is not None else Decimal("0")
             spent = spent_by_cat.get(str(cat.id), Decimal("0"))
             
             data = [
@@ -206,7 +206,7 @@ class CategoriesView(QWidget):
                 color: #fa0202
             }
             """)
-            del_btn.clicked.connect(lambda checked, cid=cat.id: self._delete_category(cid))
+            del_btn.clicked.connect(lambda checked, cid=cat.id: self._delete_category(str(cid)))
 
             actions_layout.addWidget(edit_btn)
             actions_layout.addWidget(del_btn)
@@ -214,8 +214,9 @@ class CategoriesView(QWidget):
 
         while self.alert_layout.count():
             item = self.alert_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            wid = item.widget() if item else None
+            if wid is not None:
+                wid.deleteLater()
 
         if alert_widgets:
             self.alert_frame.setVisible(True)

@@ -26,12 +26,6 @@ from PyQt6.QtWidgets import (
 from services.expense_service import list_expenses, add_expense, update_expense, remove_expense, get_expense
 from services.category_service import list_categories, get_category
 from services.export_service import export_csv, export_pdf
-# from ui.styles.theme import COLORS
-
-
-def _format_currency(value: Decimal) -> str:
-    return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
 
 class ExpenseFormDialog(QDialog):
     def __init__(self, parent=None, expense=None):
@@ -90,7 +84,7 @@ class ExpenseFormDialog(QDialog):
     def _load_categories(self):
         cats = list_categories()
         for c in cats:
-            self.category_combo.addItem(c.name, c.id)
+            self.category_combo.addItem(str(c.name), c.id)
 
     def _save(self):
         amount = Decimal(str(self.amount.value()))
@@ -183,7 +177,7 @@ class ExpensesView(QWidget):
         self.filter_category.clear()
         self.filter_category.addItem("Todas", None)
         for c in list_categories():
-            self.filter_category.addItem(c.name, c.id)
+            self.filter_category.addItem(str(c.name), c.id)
 
     def _open_form(self, expense=None):
         d = ExpenseFormDialog(self, expense)
