@@ -18,7 +18,6 @@ def export_csv(
     date_to: Optional[datetime] = None,
     category_id: Optional[str] = None,
 ) -> str:
-    """Export filtered expenses to CSV. Returns path to file."""
     _ensure_exports_dir()
     if not filepath:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -47,7 +46,6 @@ def export_pdf(
     date_to: Optional[datetime] = None,
     category_id: Optional[str] = None,
 ) -> str:
-    """Export filtered expenses to PDF. Returns path to file."""
     try:
         from reportlab.lib import colors
         from reportlab.lib.pagesizes import A4

@@ -27,6 +27,8 @@ from services.expense_service import list_expenses, add_expense, update_expense,
 from services.category_service import list_categories, get_category
 from services.export_service import export_csv, export_pdf
 
+from ..utils import _format_currency
+
 class ExpenseFormDialog(QDialog):
     def __init__(self, parent=None, expense=None):
         super().__init__(parent)

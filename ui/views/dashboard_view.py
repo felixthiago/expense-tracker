@@ -58,10 +58,7 @@ class DashboardView(QScrollArea):
 
     def _build_charts(self, parent_layout: QGridLayout):
         try:
-            from PyQt6.QtCharts import QChart, QChartView, QPieSeries, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
-            from PyQt6.QtCore import QMargins
-            from PyQt6.QtGui import QColor, QBrush
-
+            from PyQt6.QtCharts import QChartView
             self._has_charts = True
 
 
