@@ -46,7 +46,7 @@ def create_category(
     session.flush()
     return cat
 
-
+# 
 def update_category(
     session: Session,
     category_id: str,
@@ -58,11 +58,11 @@ def update_category(
     if not cat:
         return None
     if name is not None:
-        cat.name = name.strip()
+        cat.name = name.strip() # type: ignore
     if color is not None:
-        cat.color = color
+        cat.color = color # type: ignore
     if monthly_limit is not None:
-        cat.monthly_limit = monthly_limit
+        cat.monthly_limit = monthly_limit # type: ignore
     return cat
 
 
@@ -181,21 +181,21 @@ def update_expense(
     if not exp:
         return None
     if amount is not None:
-        exp.amount = amount if not None else exp.amount
+        exp.amount = amount if not None else exp.amount # type: ignore
     if date is not None:
-        exp.date = date
+        exp.date = date # type: ignore
     if category_id is not None:
-        exp.category_id = category_id
+        exp.category_id = category_id # type: ignore
     if description is not None:
-        exp.description = description
+        exp.description = description # type: ignore
     if source is not None:
-        exp.source = source
+        exp.source = source # type: ignore
     return exp
 
 
 def delete_expense(session: Session, expense_id: str) -> bool:
     exp = get_expense_by_id(session, expense_id)
-    if not exp:
+    if exp is None:
         return False
     session.delete(exp)
     return True

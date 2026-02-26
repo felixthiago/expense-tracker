@@ -27,7 +27,7 @@ from services.expense_service import list_expenses, add_expense, update_expense,
 from services.category_service import list_categories, get_category
 from services.export_service import export_csv, export_pdf
 
-from ..utils import _format_currency
+from ..utils import _format_currency, _safe_call
 
 class ExpenseFormDialog(QDialog):
     def __init__(self, parent=None, expense=None):
@@ -155,9 +155,9 @@ class ExpensesView(QWidget):
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(["Data", "Valor", "Categoria", "Descrição", "Banco", "Ações"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(50)
+        _safe_call(self.table.horizontalHeader(), "setSectionResizeMode", QHeaderView.ResizeMode.Stretch)
+        _safe_call(self.table.verticalHeader(), "setVisible", False)
+        _safe_call(self.table.verticalHeader(), "setDefaultSectionSize", 50)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
         layout.addWidget(self.table)
@@ -211,25 +211,29 @@ class ExpensesView(QWidget):
             QMessageBox.critical(self, "Erro", str(e))
 
     def _edit_row(self, row: int):
-        expense_id = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-        expense = get_expense(expense_id) if expense_id else None
-        if expense:
-            self._open_form(expense)
+        item = self.table.item(row, 0)
+        if item is not None:
+            expense_id = item.data(Qt.ItemDataRole.UserRole)
+            if expense_id is not None:
+                expense = get_expense(expense_id)
+                if expense:
+                    self._open_form(expense)
 
     def _delete_row(self, row: int):
-        expense_id = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
-        if not expense_id:
-            return
-        if QMessageBox.question(
-            self, "Confirmar",
-            "Excluir esta despesa?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
-        ) == QMessageBox.StandardButton.Yes:
-            remove_expense(expense_id)
-            self.refresh()
-            if self.main_window:
-                self.main_window.refresh_current_view()
+        item = self.table.item(row, 0)
+        if item is not None:
+            expense_id = item.data(Qt.ItemDataRole.UserRole)
+            if expense_id is not None:
+                if QMessageBox.question(
+                    self, "Confirmar",
+                    "Excluir esta despesa?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No,
+                ) == QMessageBox.StandardButton.Yes:
+                    remove_expense(expense_id)
+                    self.refresh()
+                    if self.main_window:
+                        self.main_window.refresh_current_view()
 
     def refresh(self):
         date_from = datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time())
@@ -241,8 +245,8 @@ class ExpensesView(QWidget):
         for row, e in enumerate(expenses):
             category = get_category(str(e.category_id))
             data = [
-                e.date.strftime("%d/%m/%Y") if e.date else "",
-                _format_currency(e.amount),
+                e.date.strftime("%d/%m/%Y") if e.date is not None else "",
+                _format_currency(Decimal(str(e.amount))),
                 category.name if category else "no category relationship",
                 (e.description or "")[:25],
                 str(e.source or ""),

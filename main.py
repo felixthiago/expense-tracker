@@ -10,14 +10,14 @@ from ui.main_window import MainWindow
 
 def main():
     init_db()
-    
+
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
     
     app = QApplication(sys.argv)
 
-    app.setWindowIcon(app.style().standardIcon(getattr(QStyle.StandardPixmap, "SP_ComputerIcon")))
+    # app.setWindowIcon(app.style().standardIcon(getattr(QStyle.StandardPixmap, "SP_ComputerIcon")))
     app.setApplicationName(APP_NAME)
     app.setStyle("Fusion")
 

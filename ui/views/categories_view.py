@@ -26,7 +26,7 @@ from core.database import session_scope
 from core import repository as repo
 from services.category_service import list_categories, create_category, update_category, delete_category
 from ui.styles.theme import COLORS
-from ..utils import _format_currency
+from ..utils import _format_currency, _safe_call
 
 class CategoryFormDialog(QDialog):
     def __init__(self, parent=None, category=None):
@@ -117,12 +117,14 @@ class CategoriesView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnWidth(0, 200)
         self.table.setColumnCount(5)
-        self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(45)
+        
+        _safe_call(self.table.verticalHeader(), "setVisible", False)
+        _safe_call(self.table.verticalHeader(), "setDefaultSectionSize", 45)
+        _safe_call(self.table.horizontalHeader(), "setSectionResizeMode", QHeaderView.ResizeMode.Stretch)
+
         self.table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.setHorizontalHeaderLabels(["Nome", "Cor", "Limite mensal", "Gasto atual*", "Ações"])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.table.setHorizontalHeaderLabels(["Nome", "Cor", "Limite mensal", "Gasto atual*", "Ações"])        
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         layout.addWidget(self.table)
         self.refresh()

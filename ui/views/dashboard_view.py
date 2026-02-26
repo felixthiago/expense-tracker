@@ -166,7 +166,7 @@ class DashboardView(QScrollArea):
         chart.setBackgroundBrush(QColor(COLORS["bg_card_dashboard"]))
         chart.setAnimationOptions(QChart.AnimationOption.SeriesAnimations)
 
-        chart_pen = QPen(QColor(COLORS["border"]), 1)
+        chart_pen = QPen(QColor(COLORS["border"]), 0.3)
         chart.setPlotAreaBackgroundPen(chart_pen)
         chart.setPlotAreaBackgroundVisible(True)
         
