@@ -23,10 +23,9 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from services.expense_service import list_expenses, add_expense, update_expense, remove_expense, get_expense
-from services.category_service import list_categories, get_category
+from services.expense_service import list_expenses, add_expense, update_expense, remove_expense, get_expense, total_spent
+from services.category_service import list_categories, get_category, get_category_color_by_id
 from services.export_service import export_csv, export_pdf
-
 from ..utils import _format_currency, _safe_call
 
 class ExpenseFormDialog(QDialog):
@@ -137,16 +136,14 @@ class ExpensesView(QWidget):
 
         self.filter_category = QComboBox()
         self.filter_category.addItem("Todas", None)
-        self.filter_apply = QPushButton("Aplicar")
-        self.filter_apply.setProperty("class", "primary")
-        self.filter_apply.clicked.connect(self.refresh)
+        self.filter_category.currentIndexChanged.connect(self.refresh)
+            
         filters_layout.addWidget(QLabel("De:"))
         filters_layout.addWidget(self.filter_date_from)
         filters_layout.addWidget(QLabel("Até:"))
         filters_layout.addWidget(self.filter_date_to)
         filters_layout.addWidget(QLabel("Categoria:"))
         filters_layout.addWidget(self.filter_category, 1)
-        filters_layout.addWidget(self.filter_apply)
         layout.addWidget(filters)
 
         self.table = QTableWidget()
@@ -161,6 +158,14 @@ class ExpensesView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
         layout.addWidget(self.table)
+
+
+        self.label_status = QLabel("")
+        self.label_status.setStyleSheet("font-size: 16px; font-weight 500; margin-top: 8px;")
+        self.label_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_status.setTextFormat(Qt.TextFormat.RichText)
+
+        layout.addWidget(self.label_status)
 
         export_row = QHBoxLayout()
         export_row.addStretch()
@@ -181,6 +186,13 @@ class ExpensesView(QWidget):
         for c in list_categories():
             self.filter_category.addItem(str(c.name), c.id)
 
+    def _get_expenses_in_category_filter(self, category_id):
+        return list_expenses(
+            date_from=datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time()),
+            date_to=datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time()),
+            category_id=category_id,
+        )
+    
     def _open_form(self, expense=None):
         d = ExpenseFormDialog(self, expense)
         if d.exec():
@@ -239,6 +251,7 @@ class ExpensesView(QWidget):
         date_from = datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time())
         date_to = datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time())
         cat_id = self.filter_category.currentData()
+
         expenses = list_expenses(date_from=date_from, date_to=date_to, category_id=cat_id)
         self.table.setRowCount(len(expenses))
 
@@ -258,7 +271,16 @@ class ExpensesView(QWidget):
                 if col == 0:
                     item.setData(Qt.ItemDataRole.UserRole, e.id)
                 self.table.setItem(row, col, item)
-            
+
+            spent = sum(e.amount for e in expenses)
+            filter_category = get_category(cat_id) if cat_id else None
+            filer_color = get_category_color_by_id(str(cat_id) if cat_id is not None else "#000000")
+
+            self.label_status.setText(
+                f"Despesas <span style='color:{filer_color};'>{filter_category.name if filter_category else 'Totais'}</span> > {len(expenses)} "
+                f"<br>Gastos totais > <span style='color:#00CB00;'>{_format_currency(spent)}</span>"
+            )
+
             actions = QWidget()
             actions_layout = QHBoxLayout(actions)
             actions_layout.setContentsMargins(0, 0, 0, 0)

@@ -23,6 +23,7 @@ COLORS = {
     "warning_soft": "rgba(245, 158, 11, 0.15)",
     "danger": "#ef4444",
     "danger_soft": "rgba(239, 68, 68, 0.15)",
+    "money": "#00CB00"
 }
 
 
