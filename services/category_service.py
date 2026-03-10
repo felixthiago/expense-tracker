@@ -10,7 +10,6 @@ def list_categories():
     with session_scope() as session:
         return repo.get_all_categories(session)
 
-
 def get_category(category_id: str):
     with session_scope() as session:
         return repo.get_category_by_id(session, category_id)
@@ -38,7 +37,6 @@ def create_category(
         return repo.create_category(
             session, name, color=color, icon=icon, monthly_limit=monthly_limit
         )
-
 
 def update_category(
     category_id: str,

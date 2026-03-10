@@ -15,3 +15,10 @@ def _safe_call(obj, method_name, *args, **kwargs):
     method = getattr(obj, method_name, None)
     if method:
         return method(*args, **kwargs)
+
+def _hex_to_rgb(hex):
+    hex_string = hex.lstrip('#')
+    r = int(hex_string[0:2], 16)
+    g = int(hex_string[2:4], 16)
+    b = int(hex_string[4:6], 16)
+    return r, g, b

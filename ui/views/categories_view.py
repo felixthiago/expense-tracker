@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QHeaderView,
+    QColorDialog
 )
 from PyQt6.QtGui import QColor
 
@@ -26,12 +27,13 @@ from core.database import session_scope
 from core import repository as repo
 from services.category_service import list_categories, create_category, update_category, delete_category
 from ui.styles.theme import COLORS
-from ..utils import _format_currency, _safe_call
+from ..utils import _format_currency, _safe_call, _hex_to_rgb
 
 class CategoryFormDialog(QDialog):
     def __init__(self, parent=None, category=None):
         super().__init__(parent)
         self.category = category
+        self.category_color = category.color
         self.setWindowTitle("Editar categoria" if category else "Nova categoria")
         self.setMinimumWidth(400)
         layout = QVBoxLayout(self)
@@ -41,10 +43,9 @@ class CategoryFormDialog(QDialog):
         self.name_edit.setPlaceholderText("Ex: Alimentação")
         form.addRow("Nome", self.name_edit)
 
-        self.color_edit = QLineEdit()
-        self.color_edit.setPlaceholderText("#6366f1")
-        self.color_edit.setText("#6366f1")
-        form.addRow("Cor (hex)", self.color_edit)
+        self.real_color_edit = QPushButton()        
+        self.real_color_edit.clicked.connect(self._color_dialog)
+        form.addRow("Selecione a cor", self.real_color_edit)
 
         self.limit_edit = QDoubleSpinBox()
         self.limit_edit.setRange(0, 99999999.99)
@@ -69,17 +70,29 @@ class CategoryFormDialog(QDialog):
 
         if category:
             self.name_edit.setText(category.name)
-            self.color_edit.setText(category.color or "#6366f1")
+            self.real_color_edit.setText(category.color or "#6366f1")
             self.limit_edit.setValue(float(category.monthly_limit or 0))
+
+    def _color_dialog(self):
+            cColor_to_rgb = _hex_to_rgb(self.category_color)
+            self.current_color_placeholder = QColor(*cColor_to_rgb)
+
+            color = QColorDialog.getColor(self.current_color_placeholder, self, "choose color")
+            if color.isValid():
+                self.current_color = color
+                self.real_color_edit.setStyleSheet(f'background-color: {color.name()}; color: #fff')
+                self.hexColor = color.name()
 
     def _save(self):
         name = self.name_edit.text().strip()
         if not name:
             QMessageBox.warning(self, "Erro", "Informe o nome da categoria.")
             return
-        color = self.color_edit.text().strip() or "#6366f1"
+        
+        color = self.hexColor or "#6366f1"
         if not color.startswith("#"):
             color = "#" + color
+
         limit = self.limit_edit.value()
         monthly_limit = Decimal(str(limit)) if limit > 0 else None
         if self.category:
@@ -87,7 +100,6 @@ class CategoryFormDialog(QDialog):
         else:
             create_category(name, color=color, monthly_limit=monthly_limit)
         self.accept()
-
 
 class CategoriesView(QWidget):
     def __init__(self, parent=None):
