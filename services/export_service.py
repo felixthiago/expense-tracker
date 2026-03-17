@@ -23,19 +23,26 @@ def export_csv(
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         filepath = str(Path(EXPORTS_DIR) / f"despesas_{ts}.csv")
 
-    expenses = list_expenses(
-        date_from=date_from, date_to=date_to, category_id=category_id
-    )
+    try:
+        print(filepath)
+        expenses = list_expenses(
+            date_from=date_from, date_to=date_to, category_id=category_id
+        )
+        with open(filepath, "w", encoding="utf-8-sig", newline="") as f:
+            print('worked')
+            f.write("Data;Valor;Categoria;Descrição;Origem\n")
+            for e in expenses:
+                date_str = e.date.strftime("%Y-%m-%d") if e.date else ""
+                amount_str = str(e.amount).replace(".", ",")
+                cat_name = e.category.name if e.category else ""
+                desc = (e.description or "").replace(";", ",").replace("\n", " ")
+                source = e.source or ""
+                print(f'{date_str};{amount_str};{cat_name};{desc};;{source}')
+                f.write(f"{date_str};{amount_str};{cat_name};{desc};{source}\n")
+        print(expenses)
+    except Exception as e:
+        print(e)
 
-    with open(filepath, "w", encoding="utf-8-sig", newline="") as f:
-        f.write("Data;Valor;Categoria;Descrição;Origem\n")
-        for e in expenses:
-            date_str = e.date.strftime("%Y-%m-%d") if e.date else ""
-            amount_str = str(e.amount).replace(".", ",")
-            cat_name = e.category.name if e.category else ""
-            desc = (e.description or "").replace(";", ",").replace("\n", " ")
-            source = e.source or ""
-            f.write(f"{date_str};{amount_str};{cat_name};{desc};{source}\n")
 
     return filepath
 

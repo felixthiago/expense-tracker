@@ -202,6 +202,7 @@ class ExpensesView(QWidget):
 
     def _export_csv(self):
         try:
+            print(self.filter_category.currentData())
             path = export_csv(
                 date_from=datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time()),
                 date_to=datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time()),

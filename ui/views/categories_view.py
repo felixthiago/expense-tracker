@@ -33,7 +33,7 @@ class CategoryFormDialog(QDialog):
     def __init__(self, parent=None, category=None):
         super().__init__(parent)
         self.category = category
-        self.category_color = category.color
+        # print(self.category.color)
         self.setWindowTitle("Editar categoria" if category else "Nova categoria")
         self.setMinimumWidth(400)
         layout = QVBoxLayout(self)
@@ -69,15 +69,23 @@ class CategoryFormDialog(QDialog):
         layout.addLayout(buttons)
 
         if category:
+            self.is_edit = True
             self.name_edit.setText(category.name)
             self.real_color_edit.setText(category.color or "#6366f1")
             self.limit_edit.setValue(float(category.monthly_limit or 0))
+        else:
+            self.is_edit = False
 
     def _color_dialog(self):
-            cColor_to_rgb = _hex_to_rgb(self.category_color)
+            if self.is_edit == True:
+                self.category_color = self.category.color
+                cColor_to_rgb = _hex_to_rgb(self.category_color)
+            else:
+                cColor_to_rgb = (255, 255, 255)
+            
             self.current_color_placeholder = QColor(*cColor_to_rgb)
 
-            color = QColorDialog.getColor(self.current_color_placeholder, self, "choose color")
+            color = QColorDialog.getColor(self.current_color_placeholder or QColor("blue"), self, "Escolher cor")
             if color.isValid():
                 self.current_color = color
                 self.real_color_edit.setStyleSheet(f'background-color: {color.name()}; color: #fff')
@@ -144,6 +152,7 @@ class CategoriesView(QWidget):
     def _open_form(self, category=None):
         d = CategoryFormDialog(self, category)
         if d.exec():
+            
             self.refresh()
             if self.main_window:
                 self.main_window.refresh_current_view()
