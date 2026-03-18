@@ -1,11 +1,9 @@
-"""Business logic for expenses."""
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
 from core.database import session_scope
 from core import repository as repo
-
 
 def add_expense(
     amount: Decimal,
@@ -18,7 +16,6 @@ def add_expense(
         return repo.create_expense(
             session, amount, date, category_id, description, source
         )
-
 
 def list_expenses(
     date_from: Optional[datetime] = None,
@@ -40,6 +37,10 @@ def list_expenses(
             source=source,
             limit=limit,
         )
+
+def list_expenses_new(**kwargs):
+    with session_scope() as session:
+        return repo.get_expenses_new(session, **kwargs)
 
 
 def get_expense(expense_id: str):

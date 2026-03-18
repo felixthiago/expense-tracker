@@ -1,4 +1,3 @@
-"""Export expenses to CSV and PDF."""
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,7 +9,6 @@ from services.expense_service import list_expenses
 
 def _ensure_exports_dir():
     Path(EXPORTS_DIR).mkdir(parents=True, exist_ok=True)
-
 
 def export_csv(
     filepath: Optional[str] = None,
@@ -24,12 +22,18 @@ def export_csv(
         filepath = str(Path(EXPORTS_DIR) / f"despesas_{ts}.csv")
 
     try:
+
+        # cat_id = self.filter_category.currentData()
+        # if cat_id == None:
+        #     cat_id = None
         print(filepath)
         expenses = list_expenses(
             date_from=date_from, date_to=date_to, category_id=category_id
         )
+        print(len(expenses))
+        print(expenses)
         with open(filepath, "w", encoding="utf-8-sig", newline="") as f:
-            print('worked')
+            # print('worked')
             f.write("Data;Valor;Categoria;Descrição;Origem\n")
             for e in expenses:
                 date_str = e.date.strftime("%Y-%m-%d") if e.date else ""
@@ -45,7 +49,6 @@ def export_csv(
 
 
     return filepath
-
 
 def export_pdf(
     filepath: Optional[str] = None,

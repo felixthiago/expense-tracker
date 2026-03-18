@@ -176,7 +176,7 @@ class ExpensesView(QWidget):
         export_row.addWidget(self.export_csv_btn)
         export_row.addWidget(self.export_pdf_btn)
         layout.addLayout(export_row)
-
+ 
         self._load_category_filter()
         self.refresh()
 
@@ -202,7 +202,10 @@ class ExpensesView(QWidget):
 
     def _export_csv(self):
         try:
-            print(self.filter_category.currentData())
+            cat_id = self.filter_category.currentData()
+            print(f"CATEGORIA >> {self.filter_category.currentData()}")
+            if cat_id == None:
+                print('categoria genérica escolhida, sem filtro de categoria necessario')
             path = export_csv(
                 date_from=datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time()),
                 date_to=datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time()),
@@ -258,6 +261,7 @@ class ExpensesView(QWidget):
 
         for row, e in enumerate(expenses):
             category = get_category(str(e.category_id))
+            # print(category)
             data = [
                 e.date.strftime("%d/%m/%Y") if e.date is not None else "",
                 _format_currency(Decimal(str(e.amount))),
@@ -276,7 +280,6 @@ class ExpensesView(QWidget):
             spent = sum(e.amount for e in expenses)
             filter_category = get_category(cat_id) if cat_id else None
             filer_color = get_category_color_by_id(str(cat_id) if cat_id is not None else "#000000")
-
             self.label_status.setText(
                 f"Despesas <span style='color:{filer_color};'>{filter_category.name if filter_category else 'Totais'}</span> > {len(expenses)} "
                 f"<br>Gastos totais > <span style='color:#00CB00;'>{_format_currency(spent)}</span>"

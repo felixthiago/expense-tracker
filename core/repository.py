@@ -4,8 +4,8 @@ from decimal import Decimal
 from typing import Optional
 import uuid
 
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select, desc
+from sqlalchemy.orm import Session, joinedload
 
 from core.models import Category, CategoryLimit, Expense
 
@@ -46,7 +46,6 @@ def create_category(
     session.flush()
     return cat
 
-# 
 def update_category(
     session: Session,
     category_id: str,
@@ -150,7 +149,7 @@ def get_expenses(
     source: Optional[str] = None,
     limit: Optional[int] = None,
 ) -> list[Expense]:
-    q = session.query(Expense).order_by(Expense.date.desc(), Expense.created_at.desc())
+    q = session.query(Expense).options(joinedload(Expense.category)).order_by(Expense.date.desc(), Expense.created_at.desc())
     if date_from:
         q = q.filter(Expense.date >= date_from)
     if date_to:
@@ -167,6 +166,14 @@ def get_expenses(
         q = q.limit(limit)
     return q.all()
 
+def get_expenses_new(session: Session, **filters) -> list[Expense]:
+    stmt = select(Expense).order_by(desc(Expense.date), desc(Expense.created_at))
+
+    if filters.get("date_from"):
+        stmt.where(Expense.date >= filters["date_from"])
+
+    if filters.get("date_to"):
+        stmt.where(Expense.date <= filters["date_to"])
 
 def update_expense(
     session: Session,
