@@ -6,7 +6,6 @@ from typing import Optional
 from app.config import EXPORTS_DIR
 from services.expense_service import list_expenses
 
-
 def _ensure_exports_dir():
     Path(EXPORTS_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -16,24 +15,19 @@ def export_csv(
     date_to: Optional[datetime] = None,
     category_id: Optional[str] = None,
 ) -> str:
+    
     _ensure_exports_dir()
+    
     if not filepath:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         filepath = str(Path(EXPORTS_DIR) / f"despesas_{ts}.csv")
 
-    try:
+    expenses = list_expenses(
+        date_from = date_from, date_to = date_to, category_id = category_id
+    )
 
-        # cat_id = self.filter_category.currentData()
-        # if cat_id == None:
-        #     cat_id = None
-        print(filepath)
-        expenses = list_expenses(
-            date_from=date_from, date_to=date_to, category_id=category_id
-        )
-        print(len(expenses))
-        print(expenses)
+    if len(expenses) > 0 and expenses != []:
         with open(filepath, "w", encoding="utf-8-sig", newline="") as f:
-            # print('worked')
             f.write("Data;Valor;Categoria;Descrição;Origem\n")
             for e in expenses:
                 date_str = e.date.strftime("%Y-%m-%d") if e.date else ""
@@ -41,13 +35,10 @@ def export_csv(
                 cat_name = e.category.name if e.category else ""
                 desc = (e.description or "").replace(";", ",").replace("\n", " ")
                 source = e.source or ""
-                print(f'{date_str};{amount_str};{cat_name};{desc};;{source}')
                 f.write(f"{date_str};{amount_str};{cat_name};{desc};{source}\n")
-        print(expenses)
-    except Exception as e:
-        print(e)
-
-
+    elif not expenses:
+        raise ValueError("Nenhuma despesa encontrada no periodo selecionados")
+    
     return filepath
 
 def export_pdf(
@@ -76,11 +67,11 @@ def export_pdf(
 
     doc = SimpleDocTemplate(
         filepath,
-        pagesize=A4,
-        rightMargin=2 * cm,
-        leftMargin=2 * cm,
-        topMargin=2 * cm,
-        bottomMargin=2 * cm,
+        pagesize = A4,
+        rightMargin = 2 * cm,
+        leftMargin = 2 * cm,
+        topMargin = 2 * cm,
+        bottomMargin = 2 * cm,
     )
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle(
@@ -102,8 +93,9 @@ def export_pdf(
     flow.append(Spacer(1, 0.5 * cm))
 
     if not expenses:
-        flow.append(Paragraph("Nenhuma despesa no período.", styles["Normal"]))
-    else:
+        raise ValueError("Nenhuma despesa encontrada no perido selecionados")
+    
+    if expenses >= 0 and expenses != []:
         data = [["Data", "Valor (R$)", "Categoria", "Descrição", "Origem"]]
         total = Decimal("0")
         for e in expenses:

@@ -203,13 +203,11 @@ class ExpensesView(QWidget):
     def _export_csv(self):
         try:
             cat_id = self.filter_category.currentData()
-            print(f"CATEGORIA >> {self.filter_category.currentData()}")
-            if cat_id == None:
-                print('categoria genérica escolhida, sem filtro de categoria necessario')
+            
             path = export_csv(
                 date_from=datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time()),
                 date_to=datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time()),
-                category_id=self.filter_category.currentData(),
+                category_id = cat_id,
             )
             QMessageBox.information(self, "Exportado", f"CSV salvo em:\n{path}")
         except Exception as e:
@@ -217,10 +215,12 @@ class ExpensesView(QWidget):
 
     def _export_pdf(self):
         try:
+            cat_id = self.filter_category.currentData()
+
             path = export_pdf(
                 date_from=datetime.combine(self.filter_date_from.date().toPyDate(), datetime.min.time()),
                 date_to=datetime.combine(self.filter_date_to.date().toPyDate(), datetime.max.time()),
-                category_id=self.filter_category.currentData(),
+                category_id = cat_id,
             )
             QMessageBox.information(self, "Exportado", f"PDF salvo em:\n{path}")
         except Exception as e:
